@@ -1,0 +1,32 @@
+---
+title: "Overview"
+output: html_document
+---
+
+# preprocess
+
+## package 
+
+```{r}
+library(tidyverse)
+```
+
+## input data
+
+```{r}
+train <- read_tsv("~/Desktop/Signate_Comp_Park/input/train.tsv")
+hot_link <- read_tsv("~/Desktop/Signate_Comp_Park/input/hotlink.tsv")
+```
+
+# 観光宿泊者データ(train)
+
+- 季節性とか周期性ある
+
+```{r}
+train %>% 
+  ggplot(aes(x=datetime,y=visitors)) +
+  geom_line() +
+  facet_wrap(~park) +
+  theme_classic(base_family = "HiraKakuPro-W3")
+```
+
