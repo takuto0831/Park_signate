@@ -14,8 +14,8 @@ library(tidyverse)
 ## input data
 
 ```{r}
-train <- read_tsv("~/Desktop/Signate_Comp_Park/input/train.tsv")
-hot_link <- read_tsv("~/Desktop/Signate_Comp_Park/input/hotlink.tsv")
+train <- read_tsv("~/Desktop/Park_signate/input/train.tsv")
+hot_link <- read_tsv("~/Desktop/Park_signate/input/hotlink.tsv")
 ```
 
 # 観光宿泊者データ(train)
@@ -30,3 +30,13 @@ train %>%
   theme_classic(base_family = "HiraKakuPro-W3")
 ```
 
+- 全体での旅行客数の推移
+
+```{r}
+train %>% 
+  group_by(datetime) %>% 
+  summarise(num = sum(visitors)) %>% 
+  ggplot(aes(x=datetime,y=num)) +
+  geom_line() +
+  theme_classic(base_family = "HiraKakuPro-W3")
+```

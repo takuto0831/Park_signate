@@ -2,10 +2,10 @@
 library(tidyverse)
 library(prophet)
 # input
-train <- read_tsv("~/Desktop/Signate_Comp_Park/input/train.tsv")
-test <- read_tsv("~/Desktop/Signate_Comp_Park/input/test.tsv")
+train <- read_tsv("~/Desktop/Park_signate/input/train.tsv")
+test <- read_tsv("~/Desktop/Park_signate/input/test.tsv")
 # func 
-source('~/Desktop/Signate_Comp_Park/script/function.R')
+source('~/Desktop/Park_signate/script/function.R')
 
 # predict 
 ## 場所ごと
@@ -33,4 +33,4 @@ submit <- test %>%
   select(index,yhat)
 
 # export
-write_tsv(submit,"~/Desktop/Signate_Comp_Park/output/sample1.tsv",col_names = FALSE)
+write_tsv(submit,"~/Desktop/Park_signate/output/sample1.tsv",col_names = FALSE)
