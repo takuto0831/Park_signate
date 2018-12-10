@@ -1,0 +1,74 @@
+---
+title: "Predict"
+output: html_document
+---
+
+```{r}
+rm(list=ls())
+```
+
+```{r}
+# package
+library(tidyverse)
+library(prophet)
+
+# input
+train <- read_tsv("~/Desktop/Park_signate/input/train.tsv")
+test <- read_tsv("~/Desktop/Park_signate/input/test.tsv")
+
+# func 
+source('~/Desktop/Park_signate/script/function.R')
+```
+
+# prophet default
+
+## predict
+
+```{r}
+ans1 <- Prophet(train,"阿寒摩周国立公園")
+ans2 <- Prophet(train,"十和田八幡平国立公園")
+ans3 <- Prophet(train,"日光国立公園")
+ans4 <- Prophet(train,"伊勢志摩国立公園")
+ans5 <- Prophet(train,"大山隠岐国立公園")
+ans6 <- Prophet(train,"阿蘇くじゅう国立公園")
+ans7 <- Prophet(train,"霧島錦江湾国立公園")
+ans8 <- Prophet(train,"慶良間諸島国立公園")
+```
+
+## plot
+
+```{r}
+## 要素ごとの可視化
+Plot_prophet_components(ans1)
+Plot_prophet_components(ans2)
+Plot_prophet_components(ans3)
+Plot_prophet_components(ans4)
+Plot_prophet_components(ans5)
+Plot_prophet_components(ans6)
+Plot_prophet_components(ans7)
+Plot_prophet_components(ans8)
+
+## 予測値と実測値
+Plot_prophet_predict(ans1,train)
+Plot_prophet_predict(ans2,train)
+Plot_prophet_predict(ans3,train)
+Plot_prophet_predict(ans4,train)
+Plot_prophet_predict(ans5,train)
+Plot_prophet_predict(ans6,train)
+Plot_prophet_predict(ans7,train)
+Plot_prophet_predict(ans8,train)
+```
+
+## MeanAbsoluteError
+
+```{r}
+MeanAbsoluteError(ans1,train)
+MeanAbsoluteError(ans2,train)
+MeanAbsoluteError(ans3,train)
+MeanAbsoluteError(ans4,train)
+MeanAbsoluteError(ans5,train)
+MeanAbsoluteError(ans6,train)
+MeanAbsoluteError(ans7,train)
+MeanAbsoluteError(ans8,train)
+```
+
