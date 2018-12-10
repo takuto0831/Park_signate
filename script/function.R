@@ -1,7 +1,25 @@
 ### function ###
-# Log_prophet: log1p -> expm1により予測(観測値に0を含むため)
+# Prophet: 通常通りにprophetのモデルを利用
+# Log_prophet: dataにlog1pを適用し, 予測結果にexpm1を適用し予測(観測値に0を含むため)
 # Plot_prophet: 実測値(点), 予測区間, 予測線 
 ################
+
+Prophet <- function(data,name){
+  # model
+  model <- data %>% 
+    filter(park == name) %>% 
+    select(datetime,visitors) %>% 
+    rename(ds = datetime, y = visitors) %>% 
+    prophet(weekly.seasonality = TRUE,
+            yearly.seasonality = TRUE)
+  # predict
+  future <- make_future_dataframe(model,365)
+  forecast <- predict(model,future) %>% 
+    mutate(park = name) %>% 
+    select(ds,park,trend,weekly,weekly_lower,weekly_upper,yearly,yearly_lower,
+           yearly_upper,yhat,yhat_lower,yhat_upper) 
+  return(forecast)
+}
 
 Log_prophet <- function(data,name){
   # model
@@ -10,25 +28,60 @@ Log_prophet <- function(data,name){
     select(datetime,visitors) %>% 
     rename(ds = datetime, y = visitors) %>% 
     mutate(y = log1p(y)) %>% 
-    prophet()
+    prophet(weekly.seasonality = TRUE,
+            yearly.seasonality = TRUE)
   # predict
   future <- make_future_dataframe(model,365)
   forecast <- predict(model,future) %>% 
-    mutate(park = name, 
-           yhat_lower = expm1(yhat_lower),
-           yhat_upper = expm1(yhat_upper),
-           yhat = expm1(yhat)) %>% 
-    select(ds,park,yhat_lower,yhat_upper,yhat)
+    mutate(park = name) %>% 
+    select(ds,park,trend,weekly,weekly_lower,weekly_upper,yearly,yearly_lower,
+           yearly_upper,yhat,yhat_lower,yhat_upper) %>% 
+    mutate_if(is.numeric,expm1)
+  # prophet_plot_components(model,forecast) + theme_classic(base_family = "HiraKakuPro-W3")
   return(forecast)
 }
 
-Plot_prophet <- function(pred,data){
-  pred %>% 
+Plot_prophet_components <- function(forecast){
+  library(lubridate)
+  library(gridExtra)
+  # trend
+  p1 <- ggplot(forecast,aes(x=ds)) +
+    geom_line(aes(y=trend)) +
+    theme_classic(base_family = "HiraKakuPro-W3") +
+    ggtitle(forecast$park[1])
+  # weekly 
+  p2 <- forecast %>% 
+    mutate(week = wday(ds,label = TRUE)) %>% 
+    head(7) %>% 
+    ggplot(aes(x=week,y=weekly,group=1)) +
+    geom_line() +
+    theme_classic(base_family = "HiraKakuPro-W3")
+  # yearly
+  p3 <- forecast %>% 
+    filter(year(ds) == 2015) %>% 
+    ggplot(aes(x=ds,y=yearly,group=1)) +
+    geom_line() +
+    theme_classic(base_family = "HiraKakuPro-W3")
+  grid.arrange(p1,p2,p3,nrow=3)
+}
+
+Plot_prophet_predict <- function(forecast,data){
+  forecast %>% 
     mutate(ds = as.Date(ds)) %>% 
     left_join(data,by=c("ds"="datetime","park" = "park")) %>% 
     ggplot(aes(x=ds)) + 
     geom_ribbon(aes(ymin=yhat_lower,ymax=yhat_upper),alpha=0.5) +
     geom_line(aes(y=yhat),color="blue") +
     geom_point(aes(y=visitors)) + 
-    theme_classic()
+    ggtitle(forecast$park[1]) +
+    theme_classic(base_family = "HiraKakuPro-W3")
+}
+
+MeanAbsoluteError <- function(forecast,data){
+  forecast %>% 
+    mutate(ds = as.Date(ds)) %>% 
+    inner_join(data,by=c("ds"="datetime","park" = "park")) %>% 
+    mutate(dif = abs(yhat-visitors)) %>% 
+    summarise(mean(dif)) %>% 
+    return()
 }

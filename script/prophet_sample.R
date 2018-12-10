@@ -8,7 +8,7 @@ test <- read_tsv("~/Desktop/Park_signate/input/test.tsv")
 source('~/Desktop/Park_signate/script/function.R')
 
 # predict 
-## 場所ごと
+## 場所ごと(Log)
 ans1 <- Log_prophet(train,"阿寒摩周国立公園")
 ans2 <- Log_prophet(train,"十和田八幡平国立公園")
 ans3 <- Log_prophet(train,"日光国立公園")
@@ -18,6 +18,8 @@ ans6 <- Log_prophet(train,"阿蘇くじゅう国立公園")
 ans7 <- Log_prophet(train,"霧島錦江湾国立公園")
 ans8 <- Log_prophet(train,"慶良間諸島国立公園")
 
+## 要素ごとの可視化
+Plot_prophet_components(ans1)
 ## 可視化例
 Plot_prophet(ans1,train)
 Plot_prophet(ans6,train)
