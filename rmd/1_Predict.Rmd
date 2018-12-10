@@ -1,43 +1,72 @@
 ---
 title: "Predict"
-output: html_document
+output: 
+    html_document:
+      md_extensions: -ascii_identifiers
+      toc: true
+      toc_depth: 3
+      code_folding: hide
 ---
 
-```{r}
-rm(list=ls())
+# set 
+
+```{r option, echo=FALSE, cache=FALSE, warning=FALSE}
+rm(list = ls())
+library(knitr)
+## Global options
+options(max.print="75", digits=5)
+opts_chunk$set(echo=TRUE,
+               cache = TRUE,
+	             prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
 ```
 
-```{r}
+```{r include=FALSE,message=FALSE}
 # package
 library(tidyverse)
 library(prophet)
+library(ggforce)
 
 # input
 train <- read_tsv("~/Desktop/Park_signate/input/train.tsv")
 test <- read_tsv("~/Desktop/Park_signate/input/test.tsv")
-
+weather <- read_tsv("~/Desktop/Park_signate/input/weather.tsv")
+holidays <- read_csv("~/Desktop/Park_signate/input/holiday.csv") %>% 
+  mutate(ds = as.Date(ds))
+long_holidays <- read_csv("~/Desktop/Park_signate/input/long_term_holiday.csv") %>% 
+  mutate(ds = as.Date(ds))
+holidays <- bind_rows(holidays,long_holidays)
 # func 
 source('~/Desktop/Park_signate/script/function.R')
 ```
 
-# prophet default
+# prophet default settings
 
-## predict
+- 初期設定のまま
+- 週周期, 年周期を含む
+
+## prophetによる予測
 
 ```{r}
-ans1 <- Prophet(train,"阿寒摩周国立公園")
-ans2 <- Prophet(train,"十和田八幡平国立公園")
-ans3 <- Prophet(train,"日光国立公園")
-ans4 <- Prophet(train,"伊勢志摩国立公園")
-ans5 <- Prophet(train,"大山隠岐国立公園")
-ans6 <- Prophet(train,"阿蘇くじゅう国立公園")
-ans7 <- Prophet(train,"霧島錦江湾国立公園")
-ans8 <- Prophet(train,"慶良間諸島国立公園")
+ans1 <- Prophet(train,"阿寒摩周国立公園",event = holidays)
+ans2 <- Prophet(train,"十和田八幡平国立公園",event = holidays)
+ans3 <- Prophet(train,"日光国立公園",event = holidays)
+ans4 <- Prophet(train,"伊勢志摩国立公園",event = holidays)
+ans5 <- Prophet(train,"大山隠岐国立公園",event = holidays)
+ans6 <- Prophet(train,"阿蘇くじゅう国立公園",event = holidays)
+ans7 <- Prophet(train,"霧島錦江湾国立公園",event = holidays)
+ans8 <- Prophet(train,"慶良間諸島国立公園",event = holidays)
 ```
 
-## plot
+## 可視化
 
-```{r}
+- 要因ごとの可視化, 予測値と実測値の可視化
+
+```{r fig.width=15}
 ## 要素ごとの可視化
 Plot_prophet_components(ans1)
 Plot_prophet_components(ans2)
@@ -59,7 +88,9 @@ Plot_prophet_predict(ans7,train)
 Plot_prophet_predict(ans8,train)
 ```
 
-## MeanAbsoluteError
+## 精度(MeanAbsoluteError)
+
+- default + 祝日 + 変化点のスケール(0.5): MAE 1769.09
 
 ```{r}
 MeanAbsoluteError(ans1,train)
@@ -70,5 +101,82 @@ MeanAbsoluteError(ans5,train)
 MeanAbsoluteError(ans6,train)
 MeanAbsoluteError(ans7,train)
 MeanAbsoluteError(ans8,train)
+MeanAbsoluteError(bind_rows(ans1,ans2,ans3,ans4,ans5,ans6,ans7,ans8),
+                  train)
+```
+
+## submit file 作成用
+
+```{r eval=FALSE,echo=FALSE}
+# combine data
+ans <- bind_rows(ans1,ans2,ans3,ans4,ans5,ans6,ans7,ans8)
+
+# make submit file
+submit <- test %>% 
+  left_join(mutate(ans,ds = as.Date(ds)),
+            by=c("datetime" = "ds","park" = "park")) %>% 
+  select(index,yhat)
+
+# export
+write_tsv(submit,"~/Desktop/Park_signate/output/prophet_default_holidays.tsv",col_names = FALSE)
+```
+
+# prophet log settings
+
+- 観測値にlog1p変換(0が存在するため)
+- 出力値にexpm1変換
+
+## prophetによる予測
+
+```{r}
+ans1 <- Log_prophet(train,"阿寒摩周国立公園",event = holidays)
+ans2 <- Log_prophet(train,"十和田八幡平国立公園",event = holidays)
+ans3 <- Log_prophet(train,"日光国立公園",event = holidays)
+ans4 <- Log_prophet(train,"伊勢志摩国立公園",event = holidays)
+ans5 <- Log_prophet(train,"大山隠岐国立公園",event = holidays)
+ans6 <- Log_prophet(train,"阿蘇くじゅう国立公園",event = holidays)
+ans7 <- Log_prophet(train,"霧島錦江湾国立公園",event = holidays)
+ans8 <- Log_prophet(train,"慶良間諸島国立公園",event = holidays)
+```
+
+## 可視化
+
+- 要因ごとの可視化, 予測値と実測値の可視化
+
+```{r fig.width=15}
+## 要素ごとの可視化
+Plot_prophet_components(ans1)
+Plot_prophet_components(ans2)
+Plot_prophet_components(ans3)
+Plot_prophet_components(ans4)
+Plot_prophet_components(ans5)
+Plot_prophet_components(ans6)
+Plot_prophet_components(ans7)
+Plot_prophet_components(ans8)
+
+## 予測値と実測値
+Plot_prophet_predict(ans1,train)
+Plot_prophet_predict(ans2,train)
+Plot_prophet_predict(ans3,train)
+Plot_prophet_predict(ans4,train)
+Plot_prophet_predict(ans5,train)
+Plot_prophet_predict(ans6,train)
+Plot_prophet_predict(ans7,train)
+Plot_prophet_predict(ans8,train)
+```
+
+## 精度(MeanAbsoluteError)
+
+```{r}
+MeanAbsoluteError(ans1,train)
+MeanAbsoluteError(ans2,train)
+MeanAbsoluteError(ans3,train)
+MeanAbsoluteError(ans4,train)
+MeanAbsoluteError(ans5,train)
+MeanAbsoluteError(ans6,train)
+MeanAbsoluteError(ans7,train)
+MeanAbsoluteError(ans8,train)
+MeanAbsoluteError(bind_rows(ans1,ans2,ans3,ans4,ans5,ans6,ans7,ans8),
+                  train)
 ```
 

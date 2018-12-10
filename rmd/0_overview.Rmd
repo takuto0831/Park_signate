@@ -9,6 +9,7 @@ output: html_document
 
 ```{r}
 library(tidyverse)
+library(lubridate)
 ```
 
 ## input data
@@ -36,7 +37,49 @@ train %>%
 train %>% 
   group_by(datetime) %>% 
   summarise(num = sum(visitors)) %>% 
+  ungroup() %>% 
   ggplot(aes(x=datetime,y=num)) +
   geom_line() +
+  theme_classic(base_family = "HiraKakuPro-W3")
+```
+
+# 祝日効果の作成
+
+## 国民の休日等に対する処理
+
+- GW: 2015~2017年において調査し, 土日の連結させるように影響を記述
+- 元旦: -3 ~ +3まで影響すると考える
+- その他:祝日が
+  - 月曜日: 土日に出かけやすくなる, -2 ~ 0
+  - 火曜日~木曜日: 特になし, 0 ~ 0
+  - 金曜日: 金土で出かけて日休み, 0 ~ 1
+  - 土曜日, 日曜日: 振替とかあるなら消すべき?
+
+## 長期休暇に対する処理
+
+- 春休みの影響: 3月最終週と4月最初の週の日曜日に-2 ~ +2
+
+```{r}
+train %>% 
+  group_by(datetime) %>% 
+  summarise(num = sum(visitors)) %>% 
+  ungroup() %>% 
+  filter(year(datetime) == 2016, month(datetime) == 3) %>% 
+  ggplot(aes(x=datetime,y=num)) +
+  geom_point() +
+  theme_classic(base_family = "HiraKakuPro-W3")
+```
+
+- 夏休み効果: 7月第3週月曜日から40日間とする
+
+```{r}
+train %>% 
+  group_by(datetime) %>% 
+  summarise(num = sum(visitors)) %>% 
+  ungroup() %>% 
+  filter(year(datetime) == 2015) %>% 
+  filter(month(datetime) == 8) %>% 
+  ggplot(aes(x=datetime,y=num)) +
+  geom_point() +
   theme_classic(base_family = "HiraKakuPro-W3")
 ```
