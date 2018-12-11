@@ -89,6 +89,24 @@ Plot_prophet_predict <- function(forecast,data){
     theme_classic(base_family = "HiraKakuPro-W3")
 }
 
+ResidualCheck <- function(forecast,data){
+  library(gridExtra)
+  p1 <- forecast %>% 
+    mutate(ds = as.Date(ds)) %>% 
+    inner_join(data,by=c("ds"="datetime","park" = "park")) %>% 
+    mutate(dif = yhat-visitors) %>% 
+    ggplot(aes(x=dif)) +
+    geom_histogram(bins = 50) +
+    theme_classic()
+  p2 <- forecast %>% 
+    mutate(ds = as.Date(ds)) %>% 
+    inner_join(data,by=c("ds"="datetime","park" = "park")) %>% 
+    mutate(dif = yhat-visitors) %>% 
+    ggplot(aes(x=ds,y=dif)) +
+    geom_line() +
+    theme_classic()
+  grid.arrange(p1,p2,ncol=2)
+}
 MeanAbsoluteError <- function(forecast,data){
   tmp <- forecast %>% 
     mutate(ds = as.Date(ds)) %>% 

@@ -118,7 +118,7 @@ submit <- test %>%
   select(index,yhat)
 
 # export
-write_tsv(submit,"~/Desktop/Park_signate/output/prophet_default_holidays.tsv",col_names = FALSE)
+write_tsv(submit,"~/Desktop/Park_signate/output/prophet_log_holidays.tsv",col_names = FALSE)
 ```
 
 # prophet log settings
@@ -165,7 +165,9 @@ Plot_prophet_predict(ans7,train)
 Plot_prophet_predict(ans8,train)
 ```
 
-## 精度(MeanAbsoluteError)
+## 精度
+
+- MeanAbsoluteError
 
 ```{r}
 MeanAbsoluteError(ans1,train)
@@ -180,3 +182,8 @@ MeanAbsoluteError(bind_rows(ans1,ans2,ans3,ans4,ans5,ans6,ans7,ans8),
                   train)
 ```
 
+- 残差ヒストグラム
+
+```{r}
+ResidualCheck(ans1,train)
+```
